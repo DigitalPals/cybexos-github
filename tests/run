@@ -1,0 +1,11 @@
+#!/bin/sh
+# Run the plugin's tests. They need only Node 18 or newer: the helpers are
+# plain JS and the QML is read as text. The real-engine check needs a Cybex
+# OS checkout and its dev shell; see tests/engine/run.py.
+set -eu
+cd "$(dirname "$0")/.."
+node --test tests/*.test.cjs
+python3 -c "import ast, sys; [ast.parse(open(f).read(), f) for f in sys.argv[1:]]" tests/engine/run.py tests/engine/fake-gh
+if [ -n "${CYBEXOS_CHECKOUT:-}" ]; then
+    python3 tests/engine/run.py --cybexos "$CYBEXOS_CHECKOUT"
+fi
