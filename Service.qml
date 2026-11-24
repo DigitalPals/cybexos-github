@@ -41,6 +41,45 @@ Item {
     readonly property bool pollEnabled: started
     Component.onCompleted: Qt.callLater(() => root.started = true)
 
+    // ---- the widgets and IPC -----------------------------------------------
+    // One widget per output registers here; the IPC target exists once, so
+    // `omarchy-shell digitalpals.github-inbox …` has a single handler.
+    property var widgets: []
+    function registerWidget(widget) {
+        if (widget && widgets.indexOf(widget) < 0)
+            widgets = widgets.concat([widget]);
+    }
+    function unregisterWidget(widget) {
+        widgets = widgets.filter(item => item !== widget);
+    }
+    function openPanel() {
+        const shown = widgets.filter(item => item && item.visible);
+        const target = shown.length > 0 ? shown[0] : widgets[0];
+        if (target)
+            target.open();
+    }
+    function closePanel() {
+        for (const widget of widgets)
+            if (widget && widget.opened)
+                widget.close();
+    }
+
+    IpcHandler {
+        target: "digitalpals.github-inbox"
+        function open(): void { root.openPanel(); }
+        function close(): void { root.closePanel(); }
+        function toggle(): void {
+            if (root.widgets.some(item => item && item.opened))
+                root.closePanel();
+            else
+                root.openPanel();
+        }
+        function refresh(): string {
+            root.refreshAll();
+            return "ok";
+        }
+    }
+
     // ---- repository state ------------------------------------------------
     property var repos: []
     property string login: ""

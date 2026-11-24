@@ -147,3 +147,14 @@ test("the service keeps the built-in's state file and never writes GitHub", () =
     assert.doesNotMatch(service, /"--method"|"-X"|"PATCH"|"PUT"|"POST"|"DELETE"/);
     assert.match(service, /let command = \["gh", "api", path\]/);
 });
+
+test("the IPC target exists once, in the service, not in each output's widget", () => {
+    const widget = fs.readFileSync(path.join(root, "Widget.qml"), "utf8");
+    const service = fs.readFileSync(path.join(root, "Service.qml"), "utf8");
+    assert.doesNotMatch(widget, /IpcHandler\s*\{/);
+    assert.match(widget, /manageIpc: false/);
+    assert.match(widget, /gh\.registerWidget\(root\)/);
+    assert.match(widget, /gh\.unregisterWidget\(root\)/);
+    assert.equal((service.match(/IpcHandler\s*\{/g) || []).length, 1);
+    assert.match(service, /target: "digitalpals\.github-inbox"/);
+});

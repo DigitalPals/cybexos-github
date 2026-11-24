@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1 — 2026-11-25
+
+- The IPC target (`omarchy-shell digitalpals.github-inbox open|close|toggle|refresh`)
+  lives once, in the shared service. It was declared by every output's
+  widget, so a second monitor registered a duplicate handler and logged a
+  warning.
+
 ## 1.0.0 — 2026-11-24
 
 First release as a plugin. Cybex OS's built-in GitHub widget moved here.

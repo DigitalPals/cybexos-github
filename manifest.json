@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "digitalpals.github-inbox",
   "name": "GitHub",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "DigitalPals",
   "license": "MIT",
   "description": "A GitHub Inbox in your menubar: running workflows, failed and action-required runs, directed notifications, and pushes, pull requests, issues, releases and discussions in your recent and watched repositories. Browse repositories and their latest commits. Read-only; uses the signed-in gh CLI.",

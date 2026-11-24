@@ -4,7 +4,6 @@ import QtQuick
 import QtQuick.Effects
 import qs.Commons as Commons
 import qs.Ui as Ui
-import Quickshell.Io
 import "ui"
 import "js/GitHubHelpers.js" as Helpers
 
@@ -66,18 +65,11 @@ Ui.Panel {
         value: !!root.bar && !root.bar.foregroundAnimationEnabled
     }
 
-    IpcHandler {
-        target: root.ipcTarget
-        function open(): void { root.open() }
-        function close(): void { root.close() }
-        function toggle(): void { root.toggle() }
-        function refresh(): string {
-            if (!root.ready)
-                return "not ready";
-            root.gh.refreshAll();
-            return "ok";
-        }
-    }
+    // The IPC target lives once, in the service (one widget per output):
+    // it reaches the widgets through this registration.
+    onGhChanged: if (gh && typeof gh.registerWidget === "function") gh.registerWidget(root)
+    Component.onCompleted: if (gh && typeof gh.registerWidget === "function") gh.registerWidget(root)
+    Component.onDestruction: if (gh && typeof gh.unregisterWidget === "function") gh.unregisterWidget(root)
 
     Ui.WidgetButton {
         id: chip
