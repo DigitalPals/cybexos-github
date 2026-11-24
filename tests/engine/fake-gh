@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+"""A stand-in `gh` for the real-engine check: no network, no credentials.
+
+FAKE_GH_MODE=signed-out answers like a gh with no account. Otherwise it
+answers `gh api PATH [--include] [-H ...] --jq EXPR` from small GitHub-shaped
+documents, running the plugin's own --jq projection through jq.
+"""
+import json
+import os
+import re
+import subprocess
+import sys
+from datetime import datetime, timedelta, timezone
+
+if os.environ.get("FAKE_GH_MODE") == "signed-out":
+    sys.stderr.write("To get started with GitHub CLI, please run:  gh auth login\n"
+                     "Alternatively, populate the GH_TOKEN environment variable with a GitHub API authentication token.\n")
+    sys.exit(4)
+
+args = sys.argv[1:]
+if not args or args[0] != "api":
+    sys.exit(2)
+path = args[1]
+include = "--include" in args
+jq = args[args.index("--jq") + 1] if "--jq" in args else "."
+
+now = datetime.now(timezone.utc)
+def ago(minutes):
+    return (now - timedelta(minutes=minutes)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+repos = [
+    {"full_name": "octocat/hello-world", "pushed_at": ago(4), "private": False, "archived": False, "default_branch": "main"},
+    {"full_name": "octocat/spoon-knife", "pushed_at": ago(90), "private": True, "archived": False, "default_branch": "main"},
+]
+docs = {
+    r"^/user$": {"login": "octocat"},
+    r"^/user/repos": repos,
+    r"^/repos/octocat/hello-world$": repos[0],
+    r"^/repos/[^/]+/[^/]+/commits\?": [
+        {"sha": "a1b2c3d4e5f6", "html_url": "https://github.com/octocat/hello-world/commit/a1b2c3d4e5f6",
+         "author": {"login": "octocat"},
+         "commit": {"message": "Add the greeting\n\nSay hello in the README.", "author": {"name": "Octo Cat", "date": ago(4)}}},
+        {"sha": "0f9e8d7c6b5a", "html_url": "https://github.com/octocat/hello-world/commit/0f9e8d7c6b5a",
+         "author": {"login": "hubot"},
+         "commit": {"message": "Initial commit", "author": {"name": "Hubot", "date": ago(3000)}}},
+    ],
+    r"^/repos/[^/]+/[^/]+/commits/[0-9a-f]+$": {"sha": "a1b2c3d4e5f6", "files": [{}, {}], "stats": {"additions": 12, "deletions": 3}},
+    r"^/repos/octocat/hello-world/actions/runs": {"workflow_runs": [
+        {"id": 101, "name": "CI", "display_title": "Add the greeting", "status": "in_progress", "conclusion": None,
+         "head_branch": "main", "event": "push", "actor": {"login": "octocat"}, "run_number": 42, "run_attempt": 1,
+         "created_at": ago(2), "updated_at": ago(1), "run_started_at": ago(2),
+         "html_url": "https://github.com/octocat/hello-world/actions/runs/101"},
+        {"id": 100, "name": "CI", "display_title": "Tidy the docs", "status": "completed", "conclusion": "failure",
+         "head_branch": "main", "event": "push", "actor": {"login": "octocat"}, "run_number": 41, "run_attempt": 1,
+         "created_at": ago(60), "updated_at": ago(55), "run_started_at": ago(60),
+         "html_url": "https://github.com/octocat/hello-world/actions/runs/100"},
+    ]},
+    r"^/repos/[^/]+/[^/]+/actions/runs": {"workflow_runs": []},
+    r"^/notifications": [
+        {"id": "7", "repository": {"full_name": "octocat/hello-world"},
+         "subject": {"title": "Review requested: Add the greeting", "type": "PullRequest",
+                     "url": "https://api.github.com/repos/octocat/hello-world/pulls/7"},
+         "reason": "review_requested", "unread": True, "updated_at": ago(10)},
+    ],
+    r"^/repos/octocat/hello-world/events": [
+        {"id": "9001", "type": "IssuesEvent", "created_at": ago(20), "actor": {"login": "hubot"},
+         "payload": {"action": "opened", "issue": {"number": 12, "title": "Greeting is too loud",
+                     "html_url": "https://github.com/octocat/hello-world/issues/12"}}},
+    ],
+    r"^/repos/[^/]+/[^/]+/events": [],
+}
+doc = next((value for pattern, value in docs.items() if re.search(pattern, path)), None)
+if doc is None:
+    sys.stderr.write(f"gh: Not Found (HTTP 404) for {path}\n")
+    sys.exit(1)
+out = subprocess.run(["jq", "-c", jq], input=json.dumps(doc), text=True, capture_output=True)
+if out.returncode != 0:
+    sys.stderr.write(out.stderr)
+    sys.exit(1)
+if include:
+    sys.stdout.write("HTTP/2.0 200 OK\nEtag: W/\"fake\"\nX-Poll-Interval: 60\n"
+                     "X-Ratelimit-Remaining: 4999\nX-Ratelimit-Reset: 9999999999\n\n")
+sys.stdout.write(out.stdout)
