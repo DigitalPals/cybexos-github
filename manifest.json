@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "digitalpals.github-inbox",
+  "name": "GitHub",
+  "version": "1.0.0",
+  "author": "DigitalPals",
+  "license": "MIT",
+  "description": "A GitHub Inbox in your menubar: running workflows, failed and action-required runs, directed notifications, and pushes, pull requests, issues, releases and discussions in your recent and watched repositories. Browse repositories and their latest commits. Read-only; uses the signed-in gh CLI.",
+  "kinds": [
+    "service",
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "service": "Service.qml",
+    "barWidget": "Widget.qml"
+  },
+  "barWidget": {
+    "displayName": "GitHub",
+    "description": "GitHub Inbox, repositories and commits through the gh CLI, with a live workflow marker and a pending-Inbox badge.",
+    "category": "Development",
+    "defaultSection": "right",
+    "allowMultiple": false,
+    "defaults": {
+      "badge": "dot",
+      "repos": 8,
+      "pollMins": 5,
+      "ciActivity": true,
+      "toasts": true,
+      "watch": []
+    },
+    "schema": [
+      {
+        "key": "badge",
+        "type": "enum",
+        "label": "Badge",
+        "options": [
+          { "value": "dot", "label": "Dot" },
+          { "value": "count", "label": "Count" },
+          { "value": "off", "label": "Off" }
+        ],
+        "defaultValue": "dot",
+        "description": "How the bar shows pending Inbox items: a coloured dot on the mark, a count, or nothing. Red is failures, amber other attention, accent general updates. The running-workflow marker shows either way."
+      },
+      {
+        "key": "repos",
+        "type": "integer",
+        "label": "Recent account repos",
+        "min": 3,
+        "max": 15,
+        "step": 1,
+        "defaultValue": 8,
+        "description": "How many of your most recently pushed account and org repositories the Inbox follows. Watched repositories are added on top."
+      },
+      {
+        "key": "pollMins",
+        "type": "integer",
+        "label": "Repo refresh (minutes)",
+        "min": 1,
+        "max": 30,
+        "step": 1,
+        "defaultValue": 5,
+        "description": "Also how often quiet repos' workflow runs are read; busy ones every minute."
+      },
+      {
+        "key": "ciActivity",
+        "type": "boolean",
+        "label": "CI reports",
+        "defaultValue": true,
+        "description": "Workflow rows in the Inbox for recent and watched repositories."
+      },
+      {
+        "key": "toasts",
+        "type": "boolean",
+        "label": "Toasts",
+        "defaultValue": true,
+        "description": "Notifications for pushes to watched repositories and failed or action-required workflows."
+      }
+    ]
+  }
+}

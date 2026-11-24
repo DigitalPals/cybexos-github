@@ -1,0 +1,19 @@
+# Every type in this directory must be listed: a directory carrying a qmldir
+# is not scanned implicitly (tests/structure.test.cjs enforces the list).
+singleton Theme Theme.qml
+singleton T3Theme T3Theme.qml
+singleton I18n I18n.qml
+singleton TablerFont TablerFont.qml
+ActionButton ActionButton.qml
+BrandIcon BrandIcon.qml
+Claim Claim.qml
+CommandRequest CommandRequest.qml
+HDivider HDivider.qml
+IconButton IconButton.qml
+InboxView InboxView.qml
+ScrollChrome ScrollChrome.qml
+SectionLabel SectionLabel.qml
+StateLayer StateLayer.qml
+StatusPlaceholder StatusPlaceholder.qml
+Sym Sym.qml
+WatchList WatchList.qml
